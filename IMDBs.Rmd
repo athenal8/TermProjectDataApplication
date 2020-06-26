@@ -1,0 +1,137 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#install.packages("tidyverse")
+install.packages("gapminder")
+install.packages("sqliter")
+```
+
+```{r}
+library(tidyverse)
+library(psych)
+library(gapminder)
+library(dplyr)
+library(sqliter)
+```
+
+```{r}
+akas <- read.delim("title.akas.tsv.gz", nrows = 500000, sep = "\t", na = "\\N")
+basics <- read.delim("title.basics.tsv.gz", nrows = 500000, sep = "\t", na = "\\N")
+crew <- read.delim("title.crew.tsv.gz", nrows = 500000, sep = "\t", na = "\\N")
+episode <- read.delim("title.episode.tsv.gz", nrows = 500000, sep = "\t", na = "\\N")
+principals <- read.delim("title.principals.tsv.gz", nrows = 500000, sep = "\t", na = "\\N")
+ratings <- read.delim("title.ratings.tsv.gz", nrows = 500000, sep = "\t", na = "\\N")
+```
+
+
+```{r}
+filter(basics, tconst == "tt0241527")
+```
+
+```{r}
+filter(basics, primaryTitle == "Harry Potter and the Sorcerer's Stone")
+```
+
+```{r}
+HPSSDirector <- filter(crew, tconst%in%c('tt0241527'))
+print(HPSSDirector)
+```
+
+```{r}
+HPSSDirectorNames <- filter(principals, nconst%in%c('nm0001060'))
+print(HPSSDirectorNames)
+```
+
+```{r}
+HarryPotters <- filter(basics, primaryTitle %in% c("Harry Potter and the Sorcerer's Stone" , "Harry Potter and the Prisoner of Azkaban","Harry Potter and the Order of the Phoenix", "Harry Potter and the Half-Blood Prince","Harry Potter and the Goblet of Fire", "Harry Potter and the Chamber of Secrets"))
+HarryPotters
+```
+
+```{r}
+HarryPotterMovies <- filter(HarryPotters, titleType == "movie")
+HarryPotterMovies
+```
+
+
+
+```{r}
+attach(HarryPotterMovies)
+HarryPotterMovies$Budget <- c("125000000","100000000","130000000","150000000","150000000","250000000")
+
+HarryPotterMovies$BoxOffice <- c("978100000","879500000","796000000","896300000","942000000","934000000")
+
+```
+
+```{r}
+print(HarryPotterMovies)
+```
+
+
+```{r}
+ggplot(data = HarryPotterMovies, mapping = aes(x = runtimeMinutes, y = BoxOffice, fill = "originalTitle")) + 
+  geom_bar(stat = "identity")
+```
+
+```{r}
+ggplot(data = HarryPotterMovies, aes(x=Budget, y=BoxOffice)) +
+    geom_point(group = "originalTitle")+
+  geom_smooth(method = 'loess')
+```
+
+
+# Connect SQLtie
+```{r}
+db <- src_sqlite("/Users/athenal/Desktop/CIS-626-170/IMDBs/imdbs.db",create = F)
+
+```
+
+```{r}
+HarryPottersbasics <- tbl(db,"namebasics")
+HarryPottersbasics
+```
+
+
+```{r}
+HarryPotterstitle <- tbl(db,"titlebasics")
+HarryPotterstitle
+```
+
+```{r}
+HarryPotterscrew <- tbl(db,"titlecrew")
+HarryPotterscrew
+```
+
+```{r}
+HarryPottersepisode <- tbl(db,"titleepisode")
+HarryPottersepisode
+```
+
+```{r}
+HarryPottersratings <- tbl(db,"titleratings")
+HarryPottersratings
+```
+
+# Select averageRating from ratings 
+```{r}
+tbl(db,sql("SELECT averageRating FROM titleratings WHERE tconst=='tt0241527'"))
+```
+
+# Select primaryTitle from basics 
+```{r}
+tbl(db,sql("SELECT primaryTitle FROM titlebasics WHERE tconst=='tt0241527'"))
+```
+
+# Select directors from crew 
+```{r}
+tbl(db,sql("SELECT directors FROM titlecrew WHERE tconst=='tt0241527'"))
+```
+
+
+
+
+
+
+
