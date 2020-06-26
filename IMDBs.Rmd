@@ -2,13 +2,14 @@
 title: "R Notebook"
 output: html_notebook
 ---
-
+# Install essential packages
 ```{r}
 #install.packages("tidyverse")
-install.packages("gapminder")
-install.packages("sqliter")
+#install.packages("gapminder")
+#install.packages("sqliter")
 ```
 
+# Load libraries
 ```{r}
 library(tidyverse)
 library(psych)
@@ -17,6 +18,7 @@ library(dplyr)
 library(sqliter)
 ```
 
+# Loading datasets
 ```{r}
 akas <- read.delim("title.akas.tsv.gz", nrows = 500000, sep = "\t", na = "\\N")
 basics <- read.delim("title.basics.tsv.gz", nrows = 500000, sep = "\t", na = "\\N")
@@ -32,37 +34,38 @@ filter(basics, tconst == "tt0241527")
 ```
 
 ```{r}
-filter(basics, primaryTitle == "Harry Potter and the Sorcerer's Stone")
+filter(basics, primaryTitle == "Harry Potter and the Sorcerer's Stone", titleType == "movie")
 ```
 
 ```{r}
 HPSSDirector <- filter(crew, tconst%in%c('tt0241527'))
-print(HPSSDirector)
+HPSSDirector
 ```
 
 ```{r}
 HPSSDirectorNames <- filter(principals, nconst%in%c('nm0001060'))
-print(HPSSDirectorNames)
+HPSSDirectorNames
 ```
 
+# Select series Harry Potter movie
 ```{r}
 HarryPotters <- filter(basics, primaryTitle %in% c("Harry Potter and the Sorcerer's Stone" , "Harry Potter and the Prisoner of Azkaban","Harry Potter and the Order of the Phoenix", "Harry Potter and the Half-Blood Prince","Harry Potter and the Goblet of Fire", "Harry Potter and the Chamber of Secrets"))
 HarryPotters
 ```
 
+# Select all harry Potter movies from "HarryPotter" 
 ```{r}
 HarryPotterMovies <- filter(HarryPotters, titleType == "movie")
 HarryPotterMovies
 ```
 
 
-
+# Adding Budget and BoxOffice data
 ```{r}
 attach(HarryPotterMovies)
 HarryPotterMovies$Budget <- c("125000000","100000000","130000000","150000000","150000000","250000000")
 
 HarryPotterMovies$BoxOffice <- c("978100000","879500000","796000000","896300000","942000000","934000000")
-
 ```
 
 ```{r}
@@ -71,21 +74,27 @@ print(HarryPotterMovies)
 
 
 ```{r}
-ggplot(data = HarryPotterMovies, mapping = aes(x = runtimeMinutes, y = BoxOffice, fill = "originalTitle")) + 
-  geom_bar(stat = "identity")
+ggplot(data = HarryPotterMovies, mapping = aes(x = Budget, y = originalTitle, fill = "originalTitle")) +
+  geom_bar(stat = "identity", position =position_dodge(width=.5)) +
+  labs(title = "Movie Title VS Budget",
+       x ="Budget", 
+       y = "Movie Title")
+ggsave("MovieTitleVSBudget.png")
 ```
 
 ```{r}
-ggplot(data = HarryPotterMovies, aes(x=Budget, y=BoxOffice)) +
+ggplot(data = HarryPotterMovies, mapping = aes(x=Budget, y=BoxOffice)) +
     geom_point(group = "originalTitle")+
-  geom_smooth(method = 'loess')
+  geom_smooth(method = 'loess')+
+  labs(title = "Movie Title VS Budget",
+       x ="Budget", 
+       y = "Movie Title")
 ```
 
 
 # Connect SQLtie
 ```{r}
 db <- src_sqlite("/Users/athenal/Desktop/CIS-626-170/IMDBs/imdbs.db",create = F)
-
 ```
 
 ```{r}
